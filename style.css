@@ -1,0 +1,67 @@
+.col-10, .col-5, .col-8, .col-7, .col-4 {
+    padding: 0;
+    margin: 0;
+}
+.app{
+    margin-top: 100px;
+}
+.app-main{
+    padding: 10px;
+    border: 1px solid rgb(29, 28, 28);
+    border-radius: 10px;
+    background-color: rgb(29, 28, 28);
+}
+.app-wrapp{
+    display: flex;
+    justify-content: space-between;
+}
+.app-number {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+.app-number-item{
+    width: 29%;
+    text-align: center;
+    padding: 7px;
+    background-color: rgb(81, 81, 82);
+    border-radius: 10px;
+    color: gainsboro;
+    margin: 5px;
+    font-size: 20px;
+    cursor: pointer;
+}
+.app-number-item_big{
+    width: 100%;
+}
+.app-result{
+    padding: 10px 10px;
+    font-size: 23px;
+    text-align: end;
+    background-color: #ffffff;
+    border-radius: 10px;
+    width: 99%;
+}
+.app-operators{
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+.app-operators-item{
+    width: 41%;
+    text-align: center;
+    padding: 7px;
+    background-color: rgb(213, 216, 40);
+    border-radius: 10px;
+    color: rgb(247, 244, 244);
+    margin: 5px;
+    font-size: 20px;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+.app-operators-item_big {
+    width: 100%;
+}
+.app-operators-item_orange{
+    background-color: rgb(185, 137, 31);
+}
