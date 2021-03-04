@@ -12,6 +12,24 @@
 <body>
     <div class="app" id="app">
         <div class="container">
+
+
+            <nav class="nav">
+                <h1>{{title}}</h1>
+                <div class="nav-items" :class="isActive">
+                    <a 
+                    v-for="(item, id) in nav" :key="nav.length"
+                    @click="changedTitle(item)"
+                    class="nav-item"
+                    :class="item"
+                    href="#"> {{item}} </a>
+                </div>
+            </nav>
+
+            
+
+
+
             <div class="app-main col-4" style="margin: 0 auto">
                 <input 
                 type="text"
