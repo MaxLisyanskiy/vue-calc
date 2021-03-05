@@ -2,6 +2,45 @@
     padding: 0;
     margin: 0;
 }
+.main {
+    display: flex;
+    justify-content: space-between;
+}
+.services {
+    padding: 10px 10px;
+    border: 1px solid #f0efef;
+    background-color: #f0efef;
+    border-radius: 10px;
+}
+.services-title{
+    text-align: center;
+}
+.services-wrapp {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+.services-tab {
+    padding: 10px;
+    margin: 5px;
+    width: 30%;
+    background-color: #d9fd83;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.services-tab-title {
+    text-align: center;
+}
+.services-tab-price{
+    text-align: center;
+}
+.services-sum{
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid #c4c4c4;
+    text-align: right;
+    font-size: 20px;
+}
 .nav {
     margin-bottom: 50px;
     display: flex;

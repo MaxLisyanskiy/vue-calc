@@ -8,8 +8,41 @@ Vue.createApp({
             isActive: 'Home',
             result: '',
             numbers: [1,2,3,4,5,6,7,8,9],
-            operators: ['*', '/', '+', '-']
+            operators: ['*', '/', '+', '-'],
+            services: [
+                {
+                    name: 'Веб разработка',
+                    price: 300,
+                    active: false
+                },{
+                    name: 'Дизайн',
+                    price: 400,
+                    active:false
+                },{
+                    name: 'Интеграция',
+                    price: 250,
+                    active:false
+                },{
+                    name: 'Обучение',
+                    price: 220,
+                    active:false
+                }
+            ],
+            finallPrice: '0'
         };
+    },
+    computed: {
+        count() {
+            let sum = 0;
+
+            this.services.forEach((item) => {
+                if (item.active) {
+                    sum += item.price;
+                }
+            });
+
+            return sum;
+        }
     },
     methods: {
         onClick(value) {
@@ -33,6 +66,9 @@ Vue.createApp({
             } else if (value == 'Контакты') {
                 this.isActive = 'Contacts';
             }
+        },
+        toggleActive(v) {
+            v.active = !v.active;
         }
     }
 }).mount('#app');

@@ -10,56 +10,74 @@
 </head>
 
 <body>
-    <div class="app" id="app">
-        <div class="container">
+	<div class="app" id="app">
+		<div class="container">
+
+			<nav class="nav">
+					<h1>{{title}}</h1>
+					<div class="nav-items" :class="isActive">
+							<a 
+							v-for="(item, id) in nav" :key="nav.length"
+							@click="changedTitle(item)"
+							class="nav-item"
+							:class="item"
+							href="#"> {{item}} </a>
+					</div>
+			</nav>
+
+					
+
+			<div class="main">
+				<div class="services col-6">
+					<h2 class="services-title">Услуги</h2>
+					<div class="services-wrapp">
+						<div class="services-tab" 
+						v-for="(item, id) in services" :key="id"
+						@click="toggleActive(item)"
+						:class="{'active': item.active}">
+						
+							<div class="services-tab-title">{{ item.name }}</div>
+							<div class="services-tab-price">{{ item.price }}$</div>
+						</div>
+					</div>
+					<div class="services-sum">
+						<p class="services-sum-text">Итого: {{count}}$</p>
+					</div>
+				</div>
+
+				<div class="app-main col-4" style="margin: 0 auto">
+					<input 
+					type="text"
+					v-model="result" 
+					@keyup.enter="calc()"
+					class="app-result" 
+					placeholder="0"
+					onkeyup="this.value = this.value.replace(/[^\d]/g,'');">
+					<div class="app-wrapp">
+							<div class="col-8">
+									<div class="app-number">
+											<div class="app-number-item" 
+											v-for="(index,id) in numbers" :key="id"
+											@click="onClick(index)">{{index}}</div>
+											<div class="app-number-item app-number-item_big" @click="onClick(0)">0</div>
+									</div>
+							</div>
+							<div class="col-4">
+									<div class="app-operators">
+											<div class="app-operators-item app-operators-item_big" @click="reset">c</div>
+											<div class="app-operators-item" 
+											v-for="(item, id) in operators" :key="id"
+											@click="onClick(item)">{{item}}</div>
+											<div class="app-operators-item app-operators-item_big app-operators-item_orange" @click='calc()'>=</div>
+									</div>
+							</div>
+					</div>
+				</div>
+			</div>
 
 
-            <nav class="nav">
-                <h1>{{title}}</h1>
-                <div class="nav-items" :class="isActive">
-                    <a 
-                    v-for="(item, id) in nav" :key="nav.length"
-                    @click="changedTitle(item)"
-                    class="nav-item"
-                    :class="item"
-                    href="#"> {{item}} </a>
-                </div>
-            </nav>
-
-            
-
-
-
-            <div class="app-main col-4" style="margin: 0 auto">
-                <input 
-                type="text"
-                v-model="result" 
-                @keyup.enter="calc()"
-                class="app-result" 
-                placeholder="0"
-                onkeyup="this.value = this.value.replace(/[^\d]/g,'');">
-                <div class="app-wrapp">
-                    <div class="col-8">
-                        <div class="app-number">
-                            <div class="app-number-item" 
-                            v-for="(index,id) in numbers" :key="id"
-                            @click="onClick(index)">{{index}}</div>
-                            <div class="app-number-item app-number-item_big" @click="onClick(0)">0</div>
-                        </div>
-                    </div>
-                    <div class="col-4">
-                        <div class="app-operators">
-                            <div class="app-operators-item app-operators-item_big" @click="reset">c</div>
-                            <div class="app-operators-item" 
-                            v-for="(item, id) in operators" :key="id"
-                            @click="onClick(item)">{{item}}</div>
-                            <div class="app-operators-item app-operators-item_big app-operators-item_orange" @click='calc()'>=</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+			</div>
+	</div>
 
     <script src="https://unpkg.com/vue@next"></script>
     <script src="main.js"></script>
