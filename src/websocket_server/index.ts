@@ -3,6 +3,7 @@ import { PlayersManager } from "../models/player/player";
 import { createUniqueId } from "../utils/createUniqueId";
 import { RoomsManager } from "../models/rooms/rooms";
 import { GamesManager } from "../models/game/game";
+import { Player } from "../models/player/player.type";
 
 enum COMMANDS {
   REG = "reg",
@@ -142,7 +143,35 @@ export class WSServer {
     const messageIn = JSON.parse(data);
     const playerData = this.playersManager.getUserByConnection(this.connections.get(id)!);
     this.roomsManager.addUserToRoom(messageIn.indexRoom, playerData!.name, playerData!.id);
+    const roomInfo = this.roomsManager.findRoomByRoomID(messageIn.indexRoom)!.roomUsers;
+
+    if (roomInfo.length === 2) {
+      roomInfo.map((player) => {
+        const websocket = this.playersManager.getPlayerById(player.id)?.websocket;
+        const messageOut = this.handleCreateGame(player.id);
+
+        websocket?.send(messageOut);
+      });
+    }
   }
+
+  private handleCreateGame = (playerId: number) => {
+    const gameId = createUniqueId();
+    const player = this.playersManager.getPlayerById(playerId);
+
+    const answer = {
+      type: "create_game",
+      data: JSON.stringify({
+        idGame: gameId,
+        idPlayer: playerId,
+      }),
+      id: 0,
+    };
+
+    this.gamesManager.addToGame(gameId, player as Player);
+
+    return JSON.stringify(answer);
+  };
 
   private handleAddShips(data: string) {
     const messageIn = JSON.parse(data);
