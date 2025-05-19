@@ -6,19 +6,20 @@ export class PlayersManager {
   private players: Map<number, Player> = new Map();
 
   public addNewPlayer(socket: WebSocket, name: string, password: string): Player {
-    const userId = createUniqueId();
+    const id = createUniqueId();
 
     const newPlayer: Player = {
-      name: name || "",
+      id,
+      name: name ?? "",
       websocket: socket,
-      index: userId,
       password: password,
       wins: 0,
       gameId: null,
       roomId: null,
       isAuth: true,
     };
-    this.players.set(userId, newPlayer);
+
+    this.players.set(id, newPlayer);
 
     return newPlayer;
   }
@@ -41,5 +42,20 @@ export class PlayersManager {
 
   public getUserByConnection(socket: WebSocket): Player | undefined {
     return Array.from(this.players.values()).find((player) => player.websocket === socket);
+  }
+
+  public updateWinners() {
+    const winnersInfo = Array.from(this.players.values()).map((player) => ({
+      name: player.name,
+      wins: player.wins,
+    }));
+
+    const answer = {
+      type: "update_winners",
+      data: JSON.stringify(winnersInfo),
+      id: 0,
+    };
+
+    return JSON.stringify(answer);
   }
 }

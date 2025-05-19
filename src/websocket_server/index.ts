@@ -1,6 +1,8 @@
 import WebSocket, { WebSocketServer } from "ws";
 import { PlayersManager } from "../models/player/player";
 import { createUniqueId } from "../utils/createUniqueId";
+import { RoomsManager } from "../models/rooms/rooms";
+import { GamesManager } from "../models/game/game";
 
 enum COMMANDS {
   REG = "reg",
@@ -9,13 +11,17 @@ enum COMMANDS {
   ADD_SHIP = "add_ships",
 }
 
-class WebsocketServer {
+export class WSServer {
   private connections: Map<number, WebSocket> = new Map();
   private wss: WebSocketServer;
   private playersManager: PlayersManager;
+  private roomsManager: RoomsManager;
+  private gamesManager: GamesManager;
 
   constructor(port: number) {
     this.playersManager = new PlayersManager();
+    this.roomsManager = new RoomsManager();
+    this.gamesManager = new GamesManager();
     this.wss = new WebSocketServer({ port });
     this.initialize();
   }
@@ -39,72 +45,121 @@ class WebsocketServer {
   }
 
   private handleMessage(data: WebSocket.Data, id: number) {
-    const messageData = JSON.parse(data.toString("utf8"));
-    const actionType = messageData.type as COMMANDS;
+    try {
+      const messageData = JSON.parse(data.toString("utf8"));
+      const actionType = messageData.type;
+      console.log(messageData);
 
-    console.log(messageData);
+      switch (actionType) {
+        case COMMANDS.REG:
+          this.handleRegistration(messageData.data, id);
+          break;
+        case COMMANDS.CREATE:
+          this.handleCreateRoom(id);
+          break;
+        case COMMANDS.ADD_USER:
+          this.handleAddUserToRoom(messageData.data, id);
+          break;
+        case COMMANDS.ADD_SHIP:
+          this.handleAddShips(messageData.data);
+          break;
+        default:
+          console.log("Unknown action type");
+      }
 
-    switch (actionType) {
-      case COMMANDS.REG:
-        this.handleRegistration(messageData.data, id);
-        break;
-      case COMMANDS.CREATE:
-        this.handleCreateRoom(id);
-        break;
-      case COMMANDS.ADD_USER:
-        this.handleAddUserToRoom(messageData.data, id);
-        break;
-      case COMMANDS.ADD_SHIP:
-        this.handleAddShips(messageData.data);
-        break;
-      default:
-        console.log("Unknown action type");
+      this.broadcastUpdates();
+    } catch (e) {
+      console.error(e, e);
     }
-
-    this.broadcastUpdates();
   }
 
   private handleRegistration(data: string, id: number) {
-    const currentPlayerData = JSON.parse(data);
-    const checkName = this.playersManager.checkExistPlayer(currentPlayerData.name);
-    console.log(currentPlayerData);
+    try {
+      const currentPlayerData = JSON.parse(data);
+      const checkName = this.playersManager.checkExistPlayer(currentPlayerData.name);
+      console.log("currentPlayerData", currentPlayerData);
 
-    if (!checkName) {
-      this.playersManager.addNewPlayer(
-        this.connections.get(id)!,
-        currentPlayerData.name,
-        currentPlayerData.password
-      );
-    }
+      if (!checkName) {
+        this.playersManager.addNewPlayer(
+          this.connections.get(id)!,
+          currentPlayerData.name,
+          currentPlayerData.password
+        );
+      }
 
-    const player = this.playersManager.getPlayerByName(currentPlayerData.name);
-    if (currentPlayerData.password !== player!.password) {
-      const messageOut = `Registration failed for ${player!.name}`;
-      this.connections.get(id)!.send(messageOut);
-    } else {
-      const messageOut = `Registration successful for ${player!.name}`;
-      this.connections.get(id)!.send(messageOut);
-      console.log(messageOut);
+      const regAnswer = (userName: string, userIndex: number) => {
+        const answer = {
+          type: "reg",
+          data: JSON.stringify({
+            name: userName,
+            index: userIndex,
+            error: false,
+            errorText: null,
+          }),
+          id: 0,
+        };
+        return JSON.stringify(answer);
+      };
+
+      const notRegAnswer = (userName: string, userIndex: number) => {
+        const answer = {
+          type: "reg",
+          data: JSON.stringify({
+            name: userName,
+            index: userIndex,
+            error: true,
+            errorText: "Login or password is incorrect",
+          }),
+          id: 0,
+        };
+        return JSON.stringify(answer);
+      };
+
+      const player = this.playersManager.getPlayerByName(currentPlayerData.name);
+      if (currentPlayerData.password !== player!.password) {
+        const messageOut = notRegAnswer(player!.name, id);
+        this.connections.get(id)!.send(messageOut);
+      } else {
+        const messageOut = regAnswer(player!.name, id);
+        this.connections.get(id)!.send(messageOut);
+        console.log(messageOut);
+      }
+    } catch (e) {
+      console.log(e);
     }
   }
 
   private handleCreateRoom(id: number) {
-    const roomId = createId();
     const playerData = this.playersManager.getUserByConnection(this.connections.get(id)!);
-    // Assuming createRoom is defined elsewhere
-    createRoom(roomId, playerData!.name, playerData!.index);
-    const messageOut = roomsInfoMessage();
-    console.log(messageOut);
-    this.connections.get(id)!.send(messageOut);
+    const room = this.roomsManager.createRoom(playerData!.name, playerData!.id);
+    if (room) {
+      const messageOut = this.roomsManager.roomsInfoMessage();
+      this.connections.get(id)!.send(messageOut);
+    }
   }
 
   private handleAddUserToRoom(data: string, id: number) {
     const messageIn = JSON.parse(data);
     const playerData = this.playersManager.getUserByConnection(this.connections.get(id)!);
+    this.roomsManager.addUserToRoom(messageIn.indexRoom, playerData!.name, playerData!.id);
   }
 
   private handleAddShips(data: string) {
     const messageIn = JSON.parse(data);
+    this.gamesManager.addShips(
+      messageIn.gameId,
+      messageIn.indexPlayer
+      // JSON.stringify(messageIn.ships)
+    );
+  }
+
+  private broadcastUpdates() {
+    const roomsInfo = this.roomsManager.roomsInfoMessage();
+    const winInfo = this.playersManager.updateWinners();
+    this.connections.forEach((ws) => {
+      ws.send(roomsInfo);
+      ws.send(winInfo);
+    });
   }
 
   private handleClose(id: number) {
@@ -112,53 +167,3 @@ class WebsocketServer {
     console.log(`Connection with id #${id} closed`);
   }
 }
-
-export { WebsocketServer };
-
-// Start the HTTP server
-// const HTTP_PORT = 8181;
-// console.log(`Start static http server on the http://localhost:${HTTP_PORT}/ port`);
-// httpServer.listen(HTTP_PORT);
-
-// // Start the WebSocket server
-// const websocketServer = new WebsocketServer(3000);
-
-// export const handleStartWebsocket = (port: number) => {
-//   const server = new WebSocket.Server({ port });
-
-//   server.on("listening", () => {
-//     console.log(`Socket server start: http://localhost:${port}/\n`);
-//   });
-
-//   server.on("close", () => {
-//     console.log("Socket server closed.\n");
-//   });
-
-//   server.on("error", (e) => {
-//     console.log("Server socket error:", e, "\n");
-//   });
-
-//   server.on("connection", (ws) => {
-//     const index = ClientsModel.createClient(ws);
-//     console.log(`Client established connection: id ${index}\n`);
-
-//     ws.on("message", (message) => {
-//       const clientMessage = convertMessageClientToStr(message);
-//       console.log(`Client's message: ${clientMessage}\n`);
-//       try {
-//         handleMessage(server, ws, clientMessage, index);
-//       } catch (e) {
-//         console.error(e);
-//       }
-//     });
-
-//     ws.on("close", () => {
-//       console.log(`Client disconnection. Id: ${index}\n`);
-//       closeConnection(server, index);
-//     });
-//   });
-
-//   server.on("error", (e) => {
-//     console.log(`Server error: ${e}`);
-//   });
-// };
