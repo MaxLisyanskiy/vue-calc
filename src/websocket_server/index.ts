@@ -175,11 +175,7 @@ export class WSServer {
 
   private handleAddShips(data: string) {
     const messageIn = JSON.parse(data);
-    this.gamesManager.addShips(
-      messageIn.gameId,
-      messageIn.indexPlayer
-      // JSON.stringify(messageIn.ships)
-    );
+    this.gamesManager.addShips(messageIn.gameId, messageIn.indexPlayer);
   }
 
   private broadcastUpdates() {
